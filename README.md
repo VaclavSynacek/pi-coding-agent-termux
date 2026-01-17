@@ -12,17 +12,24 @@ This repository maintains a Termux-compatible fork of pi-coding-agent. The port 
 npm install -g @vaclav-synacek/pi-coding-agent-termux
 ```
 
-Or build from source:
+Or build from source (on a development machine):
 
 ```bash
-pkg install git nodejs-lts
 git clone https://github.com/VaclavSynacek/pi-coding-agent-termux.git
 cd pi-coding-agent-termux
 npm install
 npm run build
+cd packages/coding-agent
+npm pack
+# Transfer the .tgz file to Termux and install it
 ```
 
-**Note**: The optional dependency `canvas` (used only for ai package tests) may fail to build on Termux. This is expected and harmless - npm will continue with installation.
+On Termux:
+```bash
+npm install -g /path/to/vaclav-synacek-pi-coding-agent-termux-0.45.7.tgz
+```
+
+**Note**: Building on Termux is not supported because the build tool (`tsgo`) doesn't have ARM64 binaries. Build on a regular machine and transfer the package, or install directly from npm.
 
 For clipboard support, install Termux:API:
 
@@ -44,10 +51,10 @@ This port modifies the upstream pi-coding-agent to work on Termux by:
   - `packages/coding-agent/package.json` (clipboard moved to optionalDependencies)
 
 ### 2. Image Processing
-- **Changed**: Uses `wasm-vips` for image processing (works on Termux)
+- **Changed**: Uses `wasm-vips` for image processing
 - **Note**: Upstream v0.45.7+ migrated from `photon-node` to `wasm-vips` which is WebAssembly-based
-- **Behavior**: Image resizing and conversion work correctly on Termux via wasm-vips
-- **Files modified**: None required - wasm-vips works out of the box on Termux
+- **Behavior**: Image resizing and conversion work correctly (wasm-vips is platform-independent)
+- **Files modified**: None required - wasm-vips works on all platforms including Termux
 
 ### 3. Update Notification
 - **Changed**: Version check and update notification system
@@ -201,11 +208,25 @@ This was the initial setup of this repository:
 6. Applied Termux patches as focused commits
 7. Tagged first release: `v0.45.7-0`
 
+## Termux Port Commits
+
+The Termux port consists of these focused commits (applied on top of upstream):
+
+1. **docs: Add comprehensive Termux port README** - Complete documentation and maintenance instructions
+2. **feat: Update TypeScript target to ES2024** - Enable modern JavaScript features
+3. **feat: Make @mariozechner/clipboard optional for Termux compatibility** - Optional require() for clipboard
+4. **feat: Add Termux clipboard support** - Integration with termux-clipboard-set/get
+5. **feat: Make @mariozechner/clipboard optional dependency** - Move to optionalDependencies in package.json
+6. **feat: Update version check to use Termux port package** - Point to @vaclav-synacek/pi-coding-agent-termux
+7. **feat: Update package.json for Termux port** - Package name and metadata
+8. **feat: Make canvas optional dependency in ai package** - Allow clean build on Termux
+9. **chore: Remove package-lock.json** - Platform-independent dependency resolution
+
 ## Commit Strategy for Rebasing
 
-To make rebasing easier, Termux-specific changes should be organized as **minimal, focused commits**:
+To make rebasing easier, Termux-specific changes are organized as **minimal, focused commits**:
 
-- One commit per logical change (e.g., "Make clipboard package optional", "Add Termux clipboard support")
+- One commit per logical change
 - Clear commit messages explaining why the change is needed for Termux
 - Avoid mixing unrelated changes
 - Keep patches as small as possible while maintaining functionality
@@ -217,12 +238,14 @@ This approach ensures that when rebasing onto new upstream versions, conflicts a
 
 ## Development Notes
 
-### Building
+### Building (Development Machine Required)
+
+**Important**: Building requires `tsgo` which doesn't have Android ARM64 binaries. Build on a regular development machine (Linux/macOS/Windows).
 
 This is a monorepo. To build all packages:
 
 ```bash
-# From repository root
+# From repository root (on development machine)
 npm install
 npm run build
 ```
@@ -234,7 +257,11 @@ cd packages/coding-agent
 npm run build
 ```
 
-**Note for Termux**: The optional dependency `canvas` (in packages/ai) may fail to build on Termux due to missing native libraries (pixman-1). This is expected and harmless - npm will skip it and continue. Canvas is only used for ai package tests, not for coding-agent functionality.
+**For Termux deployment**: Build on a development machine, then either:
+1. Publish to npm and install from there
+2. Use `npm pack` to create a .tgz file and transfer it to Termux
+
+**Note**: The optional dependency `canvas` (in packages/ai) may fail to build due to missing native libraries (pixman-1). This is expected and harmless - npm will skip it and continue. Canvas is only used for ai package tests.
 
 ### Testing on Termux
 
@@ -244,8 +271,13 @@ npm run build
    pkg update && pkg install git nodejs-lts
    pkg install termux-api  # For clipboard support
    ```
-3. Clone and build this repository
-4. Run: `./packages/coding-agent/dist/cli.js`
+3. Install the package:
+   ```bash
+   npm install -g @vaclav-synacek/pi-coding-agent-termux
+   ```
+4. Run: `pi`
+
+**For development/testing unreleased changes**: Build on a development machine, create a tarball with `npm pack`, transfer to Termux, and install with `npm install -g /path/to/package.tgz`.
 
 ### Comparison with Upstream
 
