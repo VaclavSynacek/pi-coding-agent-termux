@@ -38,7 +38,6 @@
 		"prepublishOnly": "npm run clean && npm run build"
 	},
 	"dependencies": {
-		"@mariozechner/clipboard": "^0.3.0",
 		"@mariozechner/jiti": "^2.6.2",
 		"@mariozechner/pi-agent-core": "^0.46.0",
 		"@mariozechner/pi-ai": "^0.46.0",
@@ -52,6 +51,9 @@
 		"minimatch": "^10.1.1",
 		"proper-lockfile": "^4.1.2",
 		"@silvia-odwyer/photon-node": "^0.3.4"
+	},
+	"optionalDependencies": {
+		"@mariozechner/clipboard": "^0.3.0"
 	},
 	"devDependencies": {
 		"@types/diff": "^7.0.2",
