@@ -1,5 +1,13 @@
-import Clipboard from "@mariozechner/clipboard";
 import { spawnSync } from "child_process";
+
+// Optional import - @mariozechner/clipboard may not be available on all platforms (e.g., Termux)
+let Clipboard: any = null;
+try {
+	// eslint-disable-next-line @typescript-eslint/no-require-imports
+	Clipboard = require("@mariozechner/clipboard");
+} catch {
+	// Clipboard not available - will fall back to platform-specific commands
+}
 
 export type ClipboardImage = {
 	bytes: Uint8Array;
@@ -139,11 +147,16 @@ export async function readClipboardImage(options?: {
 	const env = options?.env ?? process.env;
 	const platform = options?.platform ?? process.platform;
 
+	// Termux: termux-clipboard-get only handles text, not images
+	if (env.TERMUX_VERSION) {
+		return null;
+	}
+
 	if (platform === "linux" && isWaylandSession(env)) {
 		return readClipboardImageViaWlPaste() ?? readClipboardImageViaXclip();
 	}
 
-	if (!Clipboard.hasImage()) {
+	if (!Clipboard || !Clipboard.hasImage()) {
 		return null;
 	}
 
