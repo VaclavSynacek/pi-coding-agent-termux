@@ -1,7 +1,15 @@
 import { spawnSync } from "child_process";
 
-import { clipboard } from "./clipboard-native.js";
 import { loadPhoton } from "./photon.js";
+
+// Optional import - @mariozechner/clipboard may not be available on all platforms (e.g., Termux)
+let Clipboard: any = null;
+try {
+	// eslint-disable-next-line @typescript-eslint/no-require-imports
+	Clipboard = require("@mariozechner/clipboard");
+} catch {
+	// Clipboard not available - will fall back to platform-specific commands
+}
 
 export type ClipboardImage = {
 	bytes: Uint8Array;
@@ -168,6 +176,7 @@ export async function readClipboardImage(options?: {
 	const env = options?.env ?? process.env;
 	const platform = options?.platform ?? process.platform;
 
+	// Termux: termux-clipboard-get only handles text, not images
 	if (env.TERMUX_VERSION) {
 		return null;
 	}
@@ -177,11 +186,11 @@ export async function readClipboardImage(options?: {
 	if (platform === "linux" && isWaylandSession(env)) {
 		image = readClipboardImageViaWlPaste() ?? readClipboardImageViaXclip();
 	} else {
-		if (!clipboard || !clipboard.hasImage()) {
+		if (!Clipboard || !Clipboard.hasImage()) {
 			return null;
 		}
 
-		const imageData = await clipboard.getImageBinary();
+		const imageData = await Clipboard.getImageBinary();
 		if (!imageData || imageData.length === 0) {
 			return null;
 		}
