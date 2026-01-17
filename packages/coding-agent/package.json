@@ -1,7 +1,7 @@
 {
-	"name": "@mariozechner/pi-coding-agent",
-	"version": "0.50.0",
-	"description": "Coding agent CLI with read, bash, edit, write tools and session management",
+	"name": "@vaclav-synacek/pi-coding-agent-termux",
+	"version": "0.49.3-0",
+	"description": "Termux port of pi-coding-agent - Coding agent CLI with read, bash, edit, write tools and session management"
 	"type": "module",
 	"piConfig": {
 		"name": "pi",
@@ -77,8 +77,11 @@
 	"license": "MIT",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/badlogic/pi-mono.git",
-		"directory": "packages/coding-agent"
+		"url": "git+https://github.com/VaclavSynacek/pi-coding-agent-termux.git"
+	},
+	"homepage": "https://github.com/VaclavSynacek/pi-coding-agent-termux#readme",
+	"bugs": {
+		"url": "https://github.com/VaclavSynacek/pi-coding-agent-termux/issues"
 	},
 	"engines": {
 		"node": ">=20.0.0"
