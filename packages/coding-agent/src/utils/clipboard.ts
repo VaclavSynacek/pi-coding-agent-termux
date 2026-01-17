@@ -17,13 +17,14 @@ export function copyToClipboard(text: string): void {
 		} else if (p === "win32") {
 			execSync("clip", options);
 		} else {
-			// Linux. Try Termux, Wayland, or X11 clipboard tools.
+			// Linux - try Termux, Wayland, or X11 clipboard tools
+			// Try termux-clipboard-set first if TERMUX_VERSION is set
 			if (process.env.TERMUX_VERSION) {
 				try {
 					execSync("termux-clipboard-set", options);
 					return;
 				} catch {
-					// Fall back to Wayland or X11 tools.
+					throw new Error("Clipboard requires Termux:API (install with: pkg install termux-api)");
 				}
 			}
 
@@ -56,7 +57,16 @@ export function copyToClipboard(text: string): void {
 				}
 			}
 		}
-	} catch {
-		// Ignore - OSC 52 already emitted as fallback
+	} catch (error) {
+		const msg = error instanceof Error ? error.message : String(error);
+		// Re-throw Termux error as-is
+		if (msg.includes("Termux:API")) {
+			throw error;
+		}
+		if (p === "linux") {
+			const tools = isWaylandSession() ? "wl-copy, xclip, or xsel" : "xclip or xsel";
+			throw new Error(`Failed to copy to clipboard. Install ${tools}: ${msg}`);
+		}
+		throw new Error(`Failed to copy to clipboard: ${msg}`);
 	}
 }
