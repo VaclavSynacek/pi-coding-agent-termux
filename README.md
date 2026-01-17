@@ -1,105 +1,315 @@
-<p align="center">
-  <a href="https://shittycodingagent.ai">
-    <img src="https://shittycodingagent.ai/logo.svg" alt="pi logo" width="128">
-  </a>
-</p>
-<p align="center">
-  <a href="https://discord.com/invite/nKXTsAcmbT"><img alt="Discord" src="https://img.shields.io/badge/discord-community-5865F2?style=flat-square&logo=discord&logoColor=white" /></a>
-  <a href="https://github.com/badlogic/pi-mono/actions/workflows/ci.yml"><img alt="Build status" src="https://img.shields.io/github/actions/workflow/status/badlogic/pi-mono/ci.yml?style=flat-square&branch=main" /></a>
-</p>
+# pi-coding-agent-termux
 
-# Pi Monorepo
+Termux port of [pi-coding-agent](https://github.com/badlogic/pi-mono) - a terminal-based coding agent with multi-model support.
 
-> **Looking for the pi coding agent?** See **[packages/coding-agent](packages/coding-agent)** for installation and usage.
+**For user documentation, features, and usage instructions, please see the [upstream repository](https://github.com/badlogic/pi-mono/tree/main/packages/coding-agent).**
 
-Tools for building AI agents and managing LLM deployments.
+This repository maintains a Termux-compatible fork of pi-coding-agent. The port removes problematic dependencies and provides minimal Termux-specific replacements to enable running pi on Android devices via Termux.
 
-## Packages
-
-| Package | Description |
-|---------|-------------|
-| **[@mariozechner/pi-ai](packages/ai)** | Unified multi-provider LLM API (OpenAI, Anthropic, Google, etc.) |
-| **[@mariozechner/pi-agent-core](packages/agent)** | Agent runtime with tool calling and state management |
-| **[@mariozechner/pi-coding-agent](packages/coding-agent)** | Interactive coding agent CLI |
-| **[@mariozechner/pi-mom](packages/mom)** | Slack bot that delegates messages to the pi coding agent |
-| **[@mariozechner/pi-tui](packages/tui)** | Terminal UI library with differential rendering |
-| **[@mariozechner/pi-web-ui](packages/web-ui)** | Web components for AI chat interfaces |
-| **[@mariozechner/pi-pods](packages/pods)** | CLI for managing vLLM deployments on GPU pods |
-
-## Development
-
-### Setup
+## Installation on Termux
 
 ```bash
-npm install          # Install all dependencies
-npm run build        # Build all packages
-npm run check        # Lint, format, and type check
+npm install -g @vaclav-synacek/pi-coding-agent-termux
 ```
 
-> **Note:** `npm run check` requires `npm run build` to be run first. The web-ui package uses `tsc` which needs compiled `.d.ts` files from dependencies.
-
-### CI
-
-GitHub Actions runs on push to `main` and on pull requests. The workflow runs `npm run check` and `npm run test` for each package in parallel.
-
-**Do not add LLM API keys as secrets to this repository.** Tests that require LLM access use `describe.skipIf()` to skip when API keys are missing. This is intentional:
-
-- PRs from external contributors would have access to secrets in the CI environment
-- Malicious PR code could exfiltrate API keys
-- Tests that need LLM calls are skipped on CI and run locally by developers who have keys configured
-
-If you need to run LLM-dependent tests, run them locally with your own API keys.
-
-### Development
-
-Start watch builds for all packages:
-```bash
-npm run dev
-```
-
-Then run with tsx:
-```bash
-cd packages/coding-agent && npx tsx src/cli.ts
-cd packages/pods && npx tsx src/cli.ts
-```
-
-To run tests that don't require an LLM endpoint:
-```bash
-./test.sh
-```
-
-### Versioning (Lockstep)
-
-**All packages MUST always have the same version number.** Use these commands to bump versions:
+Or build from source:
 
 ```bash
-npm run version:patch    # 0.7.5 -> 0.7.6
-npm run version:minor    # 0.7.5 -> 0.8.0
-npm run version:major    # 0.7.5 -> 1.0.0
+pkg install git nodejs-lts
+git clone https://github.com/VaclavSynacek/pi-coding-agent-termux.git
+cd pi-coding-agent-termux
+npm install
+npm run build
 ```
 
-These commands:
-1. Update all package versions to the same number
-2. Update inter-package dependency versions (e.g., `pi-agent` depends on `pi-ai@^0.7.7`)
-3. Update `package-lock.json`
+**Note**: The optional dependency `canvas` (used only for ai package tests) may fail to build on Termux. This is expected and harmless - npm will continue with installation.
 
-**Never manually edit version numbers.** The lockstep system ensures consistency across the monorepo.
-
-### Publishing
+For clipboard support, install Termux:API:
 
 ```bash
-npm run release:patch    # Bug fixes
-npm run release:minor    # New features
-npm run release:major    # Breaking changes
+pkg install termux-api
 ```
 
-This handles version bump, CHANGELOG updates, commit, tag, publish, and push.
+## Functional Changes in this Port
 
-**NPM Token Setup**: Requires a granular access token with "Bypass 2FA on publish" enabled.
-- Go to https://www.npmjs.com/settings/badlogic/tokens/
-- Create a new "Granular Access Token" with "Bypass 2FA on publish"
-- Set the token: `npm config set //registry.npmjs.org/:_authToken=YOUR_TOKEN`
+This port modifies the upstream pi-coding-agent to work on Termux by:
+
+### 1. Clipboard Integration
+- **Changed**: `@mariozechner/clipboard` made optional (native bindings incompatible with Termux)
+- **Added**: Termux clipboard support via `termux-clipboard-set` and `termux-clipboard-get` commands
+- **Behavior**: Text clipboard works via Termux:API; image clipboard operations are disabled on Termux
+- **Files modified**: 
+  - `packages/coding-agent/src/utils/clipboard.ts`
+  - `packages/coding-agent/src/utils/clipboard-image.ts`
+  - `packages/coding-agent/package.json` (clipboard moved to optionalDependencies)
+
+### 2. Image Processing
+- **Changed**: Uses `wasm-vips` for image processing (works on Termux)
+- **Note**: Upstream v0.45.7+ migrated from `photon-node` to `wasm-vips` which is WebAssembly-based
+- **Behavior**: Image resizing and conversion work correctly on Termux via wasm-vips
+- **Files modified**: None required - wasm-vips works out of the box on Termux
+
+### 3. Update Notification
+- **Changed**: Version check and update notification system
+- **Behavior**: Checks for updates against `@vaclav-synacek/pi-coding-agent-termux` on npm (instead of upstream package)
+- **Display**: Shows correct command: `npm install -g @vaclav-synacek/pi-coding-agent-termux`
+- **Files modified**: 
+  - `packages/coding-agent/src/modes/interactive/interactive-mode.ts` (npm registry URL and install command)
+
+### 4. Optional Dependencies
+- **Changed**: `canvas` moved to optionalDependencies in `packages/ai/package.json`
+- **Reason**: Canvas cannot build on Termux (requires pixman-1), but is only used for ai tests
+- **Behavior**: npm install succeeds on Termux even if canvas build fails
+- **Files modified**: `packages/ai/package.json`
+
+### 5. TypeScript Target
+- **Changed**: `tsconfig.base.json` target set to ES2024
+- **Reason**: Support for regex `v` flag (required by some dependencies)
+- **Files modified**: `tsconfig.base.json`
+
+## Repository Structure & Maintenance
+
+This repository follows a structured branching strategy to track upstream releases while maintaining Termux-specific patches:
+
+### Branches
+
+- **`master`** - The main Termux port branch
+  - Contains Termux-specific modifications applied on top of upstream
+  - Rebased onto new upstream versions when they are released
+  - Force-pushed after each rebase (history is rewritten)
+  
+- **`upstream`** - Clean upstream tracking branch
+  - Mirrors `https://github.com/badlogic/pi-mono.git` main branch
+  - Used as the base for rebasing master
+  - Never contains Termux-specific changes
+  - Helps maintain transparency about what's changed in the port
+
+### Tags
+
+Tags follow the naming convention: `v{UPSTREAM_VERSION}-{PORT_REVISION}`
+
+Examples:
+- `v0.45.7-0` - First Termux port of upstream v0.45.7
+- `v0.45.7-1` - Second Termux port of upstream v0.45.7 (port bugfix)
+- `v0.46.0-0` - First Termux port of upstream v0.46.0
+
+**Tags are immutable** - once published to npm, a tag is never changed or deleted. This preserves the complete version history.
+
+### Remotes
+
+- `origin` - This repository (`VaclavSynacek/pi-coding-agent-termux`)
+- `upstream` - Upstream repository (`badlogic/pi-mono`)
+
+## Maintenance Workflow
+
+### When a New Upstream Version is Released
+
+Example: Upstream releases `v0.46.0`
+
+1. **Update upstream branch**
+   ```bash
+   git checkout upstream
+   git fetch upstream
+   git merge upstream/main  # or git reset --hard upstream/main
+   git push origin upstream
+   ```
+
+2. **Rebase master onto new upstream version**
+   ```bash
+   git checkout master
+   git rebase v0.46.0  # rebase onto the upstream tag
+   ```
+
+3. **Resolve conflicts**
+   - Fix any rebase conflicts in Termux-specific patches
+   - Pay special attention to files listed in "Functional Changes" section above
+   - Ensure patches still apply cleanly and make sense
+
+4. **Test locally on development machine**
+   - Build the project: `npm install && npm run build`
+   - Run checks: `npm run check`
+   - Ensure everything compiles and passes linting
+
+5. **Commit and push for testing**
+   ```bash
+   git push origin master --force-with-lease
+   ```
+
+6. **Test on actual Termux device**
+   - Clone or pull the updated repository on Termux device
+   - Navigate to the repository: `cd path/to/pi-coding-agent-termux`
+   - Install dependencies: `npm install` (canvas build failure is expected and harmless)
+   - Verify clipboard operations (with Termux:API installed)
+   - Test that image operations work correctly
+   - Check that all core features work
+   - **If issues are found**: Fix them, commit, and repeat steps 4-6
+
+7. **Update package.json version**
+   ```bash
+   cd packages/coding-agent
+   # Update version to {UPSTREAM_VERSION}-{PORT_REVISION} (e.g., "0.46.0-0")
+   ```
+
+8. **Create immutable release tag**
+   ```bash
+   git tag -a v0.46.0-0 -m "Termux port of upstream v0.46.0"
+   git push origin v0.46.0-0
+   ```
+
+9. **Publish to npm**
+   ```bash
+   cd packages/coding-agent
+   npm publish
+   ```
+
+### When Port Needs a Bugfix (Without Upstream Change)
+
+Example: Fix a bug in the Termux port of v0.46.0
+
+1. **Make fixes on master branch**
+   ```bash
+   git checkout master
+   # Make your fixes
+   git commit -m "fix: describe the port-specific fix"
+   ```
+
+2. **Test locally and on Termux device**
+   - Follow steps 4-6 from the upstream update workflow above
+   - Repeat until fixes are confirmed working
+
+3. **Update package.json version** (increment port revision)
+   ```bash
+   cd packages/coding-agent
+   # Increment PORT_REVISION: "0.46.0-0" → "0.46.0-1"
+   ```
+
+4. **Create new port revision tag**
+   ```bash
+   git tag -a v0.46.0-1 -m "Termux port of upstream v0.46.0 (bugfix)"
+   git push origin v0.46.0-1
+   ```
+
+5. **Publish to npm**
+   ```bash
+   cd packages/coding-agent
+   npm publish
+   ```
+
+### Initial Setup (Already Done)
+
+This was the initial setup of this repository:
+
+1. Created new repository
+2. Added upstream remote: `git remote add upstream https://github.com/badlogic/pi-mono.git`
+3. Fetched upstream: `git fetch upstream --tags`
+4. Created `upstream` branch: `git checkout -b upstream upstream/main`
+5. Created `master` branch from upstream v0.45.7: `git checkout -b master v0.45.7`
+6. Applied Termux patches as focused commits
+7. Tagged first release: `v0.45.7-0`
+
+## Commit Strategy for Rebasing
+
+To make rebasing easier, Termux-specific changes should be organized as **minimal, focused commits**:
+
+- One commit per logical change (e.g., "Make clipboard package optional", "Add Termux clipboard support")
+- Clear commit messages explaining why the change is needed for Termux
+- Avoid mixing unrelated changes
+- Keep patches as small as possible while maintaining functionality
+
+This approach ensures that when rebasing onto new upstream versions, conflicts are:
+- Easier to understand and resolve
+- Less likely to occur
+- Clearly attributable to specific Termux requirements
+
+## Development Notes
+
+### Building
+
+This is a monorepo. To build all packages:
+
+```bash
+# From repository root
+npm install
+npm run build
+```
+
+To build only the coding-agent package:
+
+```bash
+cd packages/coding-agent
+npm run build
+```
+
+**Note for Termux**: The optional dependency `canvas` (in packages/ai) may fail to build on Termux due to missing native libraries (pixman-1). This is expected and harmless - npm will skip it and continue. Canvas is only used for ai package tests, not for coding-agent functionality.
+
+### Testing on Termux
+
+1. Install Termux from F-Droid
+2. Install dependencies:
+   ```bash
+   pkg update && pkg install git nodejs-lts
+   pkg install termux-api  # For clipboard support
+   ```
+3. Clone and build this repository
+4. Run: `./packages/coding-agent/dist/cli.js`
+
+### Comparison with Upstream
+
+To see all Termux-specific changes:
+
+```bash
+git diff upstream master
+```
+
+To see changes in a specific file:
+
+```bash
+git diff upstream master packages/coding-agent/src/utils/clipboard.ts
+```
+
+## Publishing to npm
+
+The package is published as `@vaclav-synacek/pi-coding-agent-termux` on npm.
+
+**Publishing steps:**
+
+```bash
+cd packages/coding-agent
+npm publish
+```
+
+**Key package.json fields:**
+- `name`: `@vaclav-synacek/pi-coding-agent-termux` (different from upstream to avoid conflicts)
+- `version`: Format `{UPSTREAM_VERSION}-{PORT_REVISION}` (e.g., `0.46.0-0`, `0.46.0-1`)
+- `description`: "Termux port of pi-coding-agent - Coding agent CLI with read, bash, edit, write tools and session management"
+- `repository`: Points to this repository (`VaclavSynacek/pi-coding-agent-termux`)
+- `homepage`: https://github.com/VaclavSynacek/pi-coding-agent-termux#readme
+
+## Why This Approach?
+
+This maintenance strategy provides:
+
+1. **Clean separation** - Clear distinction between upstream code and Termux patches
+2. **Easy updates** - Rebasing makes it straightforward to adopt new upstream features
+3. **Version history** - Immutable tags preserve every published version
+4. **Transparency** - Easy to see exactly what's different from upstream
+5. **Maintainability** - Future maintainers can understand the port structure
+6. **No upstream dependency** - Port can continue indefinitely without upstream acceptance
+
+## Contributing
+
+When contributing Termux-specific changes:
+
+1. Fork this repository
+2. Create a feature branch from `master`
+3. Make focused commits with clear messages
+4. Test on actual Termux device
+5. Submit pull request
+
+For general pi-coding-agent features/bugs, contribute to the [upstream repository](https://github.com/badlogic/pi-mono) instead.
 
 ## License
 
-MIT
+Same as upstream: MIT License
+
+See [LICENSE](LICENSE) file for details.
