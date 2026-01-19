@@ -1,0 +1,41 @@
+name: Build and Publish
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build TUI
+        run: npm run build -w @mariozechner/pi-tui
+
+      - name: Build AI
+        run: npm run build -w @mariozechner/pi-ai
+
+      - name: Build Agent Core
+        run: npm run build -w @mariozechner/pi-agent-core
+
+      - name: Build Coding Agent
+        run: npm run build -w @vaclav-synacek/pi-coding-agent-termux
+
+      - name: Publish to npm
+        run: npm publish -w @vaclav-synacek/pi-coding-agent-termux --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
