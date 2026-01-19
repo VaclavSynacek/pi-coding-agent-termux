@@ -146,13 +146,10 @@ Example: Upstream releases `v0.46.0`
    git push origin master --force-with-lease
    ```
 
-5. **Test on termux machine**
+5. **Test on termux machine (without building)**
    - If previous steps were done on non-termux machine, move to termux now and
      git clone or git pull the master. If we are already on termux machine just continue
      here.
-   - Build the project: `npm install && npm run build`
-   - Run checks: `npm run check`
-   - Ensure everything compiles and passes linting
    - Install dependencies: `npm install`
    - Verify clipboard operations (with Termux:API installed)
    - Test that image operations work correctly

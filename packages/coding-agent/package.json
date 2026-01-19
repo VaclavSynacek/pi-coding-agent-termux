@@ -1,6 +1,6 @@
 {
 	"name": "@vaclav-synacek/pi-coding-agent-termux",
-	"version": "0.49.1-1",
+	"version": "0.49.1-2",
 	"description": "Termux port of pi-coding-agent - Coding agent CLI with read, bash, edit, write tools and session management",
 	"type": "module",
 	"piConfig": {
