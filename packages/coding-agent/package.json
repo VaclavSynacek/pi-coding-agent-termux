@@ -1,6 +1,6 @@
 {
 	"name": "@vaclav-synacek/pi-coding-agent-termux",
-	"version": "0.50.9-0",
+	"version": "0.51.1-0",
 	"description": "Termux port of pi-coding-agent - Coding agent CLI with read, bash, edit, write tools and session management",
 	"type": "module",
 	"piConfig": {
@@ -40,9 +40,9 @@
 	},
 	"dependencies": {
 		"@mariozechner/jiti": "^2.6.2",
-		"@mariozechner/pi-agent-core": "^0.50.9",
-		"@mariozechner/pi-ai": "^0.50.9",
-		"@mariozechner/pi-tui": "^0.50.9",
+		"@mariozechner/pi-agent-core": "^0.51.1",
+		"@mariozechner/pi-ai": "^0.51.1",
+		"@mariozechner/pi-tui": "^0.51.1",
 		"@silvia-odwyer/photon-node": "^0.3.4",
 		"chalk": "^5.5.0",
 		"cli-highlight": "^2.1.11",
@@ -56,7 +56,7 @@
 		"yaml": "^2.8.2"
 	},
 	"optionalDependencies": {
-		"@mariozechner/clipboard": "^0.3.0"
+		"@mariozechner/clipboard": "^0.3.2"
 	},
 	"devDependencies": {
 		"@types/diff": "^7.0.2",
