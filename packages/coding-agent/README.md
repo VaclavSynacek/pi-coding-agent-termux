@@ -1,5 +1,14 @@
 # pi-coding-agent-termux
 
-Termux port of [pi-coding-agent](https://github.com/badlogic/pi-mono) - a terminal-based coding agent with multi-model support.
+**⚠️ DEPRECATED**
 
-**For full documentation, maintenance workflow, and technical details, see the [main repository README](https://github.com/VaclavSynacek/pi-coding-agent-termux#readme).**
+This Termux port is no longer needed. **Upstream pi now supports Termux directly since v0.51.0.**
+
+Please uninstall this port and use the official upstream package:
+
+```bash
+npm uninstall -g @vaclav-synacek/pi-coding-agent-termux
+npm install -g @mariozechner/pi-coding-agent
+```
+
+For full documentation, see the [official pi-coding-agent README](https://github.com/badlogic/pi-mono/blob/main/packages/coding-agent/README.md).

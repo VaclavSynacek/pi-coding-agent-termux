@@ -583,18 +583,20 @@ export class InteractiveMode {
 
 	/**
 	 * Check npm registry for a newer version.
+	 * This port is deprecated - check upstream package instead.
 	 */
 	private async checkForNewVersion(): Promise<string | undefined> {
 		if (process.env.PI_SKIP_VERSION_CHECK) return undefined;
 
 		try {
-			const response = await fetch("https://registry.npmjs.org/@vaclav-synacek/pi-coding-agent-termux/latest");
+			const response = await fetch("https://registry.npmjs.org/@mariozechner/pi-coding-agent/latest");
 			if (!response.ok) return undefined;
 
 			const data = (await response.json()) as { version?: string };
 			const latestVersion = data.version;
 
-			if (latestVersion && latestVersion !== this.version) {
+			// Always show update notification for deprecated port
+			if (latestVersion) {
 				return latestVersion;
 			}
 
@@ -606,7 +608,7 @@ export class InteractiveMode {
 
 	/**
 	 * Get changelog entries to display on startup.
-	 * Only shows new entries since last seen version, skips for resumed sessions.
+	 * This port is deprecated - show deprecation notice instead of changelog.
 	 */
 	private getChangelogForDisplay(): string | undefined {
 		// Skip changelog for resumed/continued sessions (already have messages)
@@ -615,19 +617,26 @@ export class InteractiveMode {
 		}
 
 		const lastVersion = this.settingsManager.getLastChangelogVersion();
-		const changelogPath = getChangelogPath();
-		const entries = parseChangelog(changelogPath);
 
 		if (!lastVersion) {
 			// Fresh install - just record the version, don't show changelog
 			this.settingsManager.setLastChangelogVersion(VERSION);
 			return undefined;
-		} else {
-			const newEntries = getNewEntries(entries, lastVersion);
-			if (newEntries.length > 0) {
-				this.settingsManager.setLastChangelogVersion(VERSION);
-				return newEntries.map((e) => e.content).join("\n\n");
-			}
+		} else if (lastVersion !== VERSION) {
+			// Show deprecation notice once on version change
+			this.settingsManager.setLastChangelogVersion(VERSION);
+			return `## [${VERSION}] - Deprecation Notice
+
+**This Termux port is no longer needed.**
+
+Upstream pi-coding-agent now supports Termux directly since v0.51.0. Please switch to the official package:
+
+\`\`\`bash
+npm uninstall -g @vaclav-synacek/pi-coding-agent-termux
+npm install -g @mariozechner/pi-coding-agent
+\`\`\`
+
+All functionality from this port (optional clipboard, Termux detection, etc.) is now integrated in the upstream release.`;
 		}
 
 		return undefined;
@@ -2754,21 +2763,17 @@ export class InteractiveMode {
 	}
 
 	showNewVersionNotification(newVersion: string): void {
-		const action = isBunBinary
-			? `Download from: ${theme.fg("accent", "https://github.com/badlogic/pi-mono/releases/latest")}`
-			: `Run: ${theme.fg("accent", "npm install -g @vaclav-synacek/pi-coding-agent-termux")}`;
-		const updateInstruction = theme.fg("muted", `New version ${newVersion} is available. `) + action;
-		const changelogUrl = theme.fg(
-			"accent",
-			"https://github.com/badlogic/pi-mono/blob/main/packages/coding-agent/CHANGELOG.md",
-		);
-		const changelogLine = theme.fg("muted", "Changelog: ") + changelogUrl;
+		const deprecationMsg = theme.fg("warning", "This Termux port is deprecated. Upstream pi now supports Termux directly.");
+		const uninstallCmd = theme.fg("accent", "npm uninstall -g @vaclav-synacek/pi-coding-agent-termux");
+		const installCmd = theme.fg("accent", "npm install -g @mariozechner/pi-coding-agent");
+		const instructions = `${theme.fg("muted", "Uninstall port:")} ${uninstallCmd}\n${theme.fg("muted", "Install upstream:")} ${installCmd}`;
+		const upstreamVersion = theme.fg("muted", `Latest upstream version: ${newVersion}`);
 
 		this.chatContainer.addChild(new Spacer(1));
 		this.chatContainer.addChild(new DynamicBorder((text) => theme.fg("warning", text)));
 		this.chatContainer.addChild(
 			new Text(
-				`${theme.bold(theme.fg("warning", "Update Available"))}\n${updateInstruction}\n${changelogLine}`,
+				`${theme.bold(theme.fg("warning", "DEPRECATED"))}\n${deprecationMsg}\n${upstreamVersion}\n${instructions}`,
 				1,
 				0,
 			),
