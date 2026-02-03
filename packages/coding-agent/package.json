@@ -1,8 +1,7 @@
 {
 	"name": "@vaclav-synacek/pi-coding-agent-termux",
-	"version": "0.51.1-1",
+	"version": "0.51.1-2",
 	"description": "DEPRECATED: Use @mariozechner/pi-coding-agent instead (supports Termux since v0.51.0)",
-	"deprecated": "This Termux port is no longer needed. Upstream @mariozechner/pi-coding-agent now supports Termux directly since v0.51.0. Please uninstall this package and install the official one instead.",
 	"type": "module",
 	"piConfig": {
 		"name": "pi",
