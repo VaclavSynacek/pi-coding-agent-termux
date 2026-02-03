@@ -17,8 +17,8 @@ For documentation, see the [upstream pi-coding-agent README](https://github.com/
 
 **Why this change?**
 
-The upstream project has integrated Termux support directly, making this port redundant. All the improvements from this port (optional clipboard, Termux detection, etc.) are now part of the official release.
+The upstream project has integrated Termux support directly, making this port redundant. 
 
-**Last port version:** v0.51.1-1 (deprecation notice)
+**Last port version:** v0.51.1-2 instructs to upgrade to upstream
 
 **Upstream repository:** https://github.com/badlogic/pi-mono
